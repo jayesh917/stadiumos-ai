@@ -5,16 +5,47 @@ from app.main import app, RATE_LIMIT_WINDOWS
 client = TestClient(app)
 
 def test_cors_headers():
-    # Test request with an allowed origin (GET request will trigger CORS headers in TestClient)
+    # 1. Test allowed direct origin (localhost)
     headers = {"Origin": "http://localhost:5173"}
     resp = client.get("/api/matches", headers=headers)
     assert resp.status_code == 200
     assert resp.headers.get("access-control-allow-origin") == "http://localhost:5173"
 
-    # Test request with a disallowed origin
+    # 2. Test allowed production origin
+    headers = {"Origin": "https://stadiumos-ai.vercel.app"}
+    resp = client.get("/api/matches", headers=headers)
+    assert resp.status_code == 200
+    assert resp.headers.get("access-control-allow-origin") == "https://stadiumos-ai.vercel.app"
+
+    # 3. Test allowed vercel preview origin (regex match)
+    headers = {"Origin": "https://stadiumos-xyz-jayesh917s-projects.vercel.app"}
+    resp = client.get("/api/matches", headers=headers)
+    assert resp.status_code == 200
+    assert resp.headers.get("access-control-allow-origin") == "https://stadiumos-xyz-jayesh917s-projects.vercel.app"
+
+    # 4. Test disallowed origin
     headers = {"Origin": "http://malicious.com"}
     resp = client.get("/api/matches", headers=headers)
-    # FastAPI CORSMiddleware does not include access-control-allow-origin on disallowed origin
+    assert resp.headers.get("access-control-allow-origin") is None
+
+def test_options_preflight():
+    # OPTIONS request to a resource with allowed origin
+    headers = {
+        "Origin": "https://stadiumos-1anw0yv09-jayesh917s-projects.vercel.app",
+        "Access-Control-Request-Method": "GET",
+        "Access-Control-Request-Headers": "content-type"
+    }
+    resp = client.options("/api/matches", headers=headers)
+    assert resp.status_code in (200, 204)
+    assert resp.headers.get("access-control-allow-origin") == "https://stadiumos-1anw0yv09-jayesh917s-projects.vercel.app"
+    assert "GET" in resp.headers.get("access-control-allow-methods", "")
+
+    # OPTIONS request to a resource with disallowed origin
+    headers = {
+        "Origin": "http://malicious.com",
+        "Access-Control-Request-Method": "GET"
+    }
+    resp = client.options("/api/matches", headers=headers)
     assert resp.headers.get("access-control-allow-origin") is None
 
 def test_security_headers():
@@ -61,14 +92,32 @@ def test_rate_limiting_copilot():
     assert resp.json()["detail"] == "Too many queries. Please wait a minute."
 
 def test_websocket_security_origin():
-    # Valid origin
+    # Valid origin (localhost)
     try:
         with client.websocket_connect("/api/ws", headers={"Origin": "http://localhost:5173"}) as websocket:
             websocket.send_text("ping")
             data = websocket.receive_text()
             assert "ACK" in data
     except Exception as e:
-        pytest.fail(f"WebSocket connection with valid origin failed: {e}")
+        pytest.fail(f"WebSocket connection with localhost origin failed: {e}")
+
+    # Valid origin (production Vercel)
+    try:
+        with client.websocket_connect("/api/ws", headers={"Origin": "https://stadiumos-ai.vercel.app"}) as websocket:
+            websocket.send_text("ping")
+            data = websocket.receive_text()
+            assert "ACK" in data
+    except Exception as e:
+        pytest.fail(f"WebSocket connection with production Vercel origin failed: {e}")
+
+    # Valid origin (Vercel Preview regex matched)
+    try:
+        with client.websocket_connect("/api/ws", headers={"Origin": "https://stadiumos-abc-jayesh917s-projects.vercel.app"}) as websocket:
+            websocket.send_text("ping")
+            data = websocket.receive_text()
+            assert "ACK" in data
+    except Exception as e:
+        pytest.fail(f"WebSocket connection with Vercel preview origin failed: {e}")
 
     # Invalid origin
     with pytest.raises(Exception):

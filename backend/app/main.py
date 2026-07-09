@@ -1,6 +1,7 @@
-﻿import asyncio
+import asyncio
 import os
 import time
+import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
@@ -28,9 +29,33 @@ app = FastAPI(title="StadiumOS AI API", version="1.0.0")
 allowed_origins_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://localhost:8000")
 allowed_origins = [origin.strip() for origin in allowed_origins_raw.split(",") if origin.strip()]
 
+# Add production domains explicitly to allowed_origins
+production_origins = [
+    "https://stadiumos-1anw0yv09-jayesh917s-projects.vercel.app",
+    "https://stadiumos-ai.vercel.app"
+]
+for origin in production_origins:
+    if origin not in allowed_origins:
+        allowed_origins.append(origin)
+
+# Safe Vercel preview origin regex
+allow_origin_regex = r"^https:\/\/(stadiumos-[a-zA-Z0-9_-]+-jayesh917s-projects|stadiumos-ai(-[a-zA-Z0-9_-]+)?)\.vercel\.app$"
+compiled_origin_regex = re.compile(allow_origin_regex)
+
+def is_origin_allowed(origin: str) -> bool:
+    if not origin:
+        return True
+    origin = origin.strip().lower()
+    if origin in [o.lower() for o in allowed_origins]:
+        return True
+    if compiled_origin_regex.match(origin):
+        return True
+    return False
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,8 +100,8 @@ async def add_security_headers(request: Request, call_next):
 @app.websocket("/api/ws")
 async def websocket_endpoint(websocket: WebSocket):
     origin = websocket.headers.get("origin")
-    # Strict origin check
-    if origin and origin not in allowed_origins and "*" not in allowed_origins:
+    # Consistent origin validation
+    if origin and not is_origin_allowed(origin):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
