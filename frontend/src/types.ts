@@ -159,3 +159,36 @@ export interface AnalyticsData {
   schedule_disruption_score: number;
   ai_recommendations_accepted: number;
 }
+
+export interface ConflictDetail {
+  conflict_type: string;
+  affected_teams: string[];
+  affected_venue: string | null;
+  operational_consequence: string;
+  recommended_resolution: string;
+}
+
+export interface RescheduleImpact {
+  affected_matches: number;
+  venue_conflicts: number;
+  rest_violations: number;
+  tournament_finish_delay_minutes: number;
+  disruption_score: number;
+  schedule: Match[];
+}
+
+export interface CopilotAction {
+  action: string;
+  reason: string;
+  expected_impact: string;
+}
+
+export interface CopilotResponse {
+  summary: string;
+  risk_level: string;
+  evidence: string[];
+  recommended_actions: CopilotAction[];
+  affected_entities: string[];
+  confidence: number;
+  requires_confirmation: boolean;
+}

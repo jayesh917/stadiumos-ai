@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Tournament } from '../types';
 import { Trophy, Calendar, Settings, Play, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 
@@ -58,8 +58,8 @@ export const TournamentWizard: React.FC<TournamentWizardProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 font-sans select-none">
-      
+    <div className="max-w-4xl mx-auto space-y-6 font-sans">
+
       {/* Header Info */}
       <div className="bg-surface border border-border p-6 rounded-xl space-y-2">
         <h2 className="text-xl font-bold tracking-tight text-white uppercase flex items-center gap-2">
@@ -74,12 +74,12 @@ export const TournamentWizard: React.FC<TournamentWizardProps> = ({
         /* Tournament Active Display */
         <div className="bg-surface border border-primary/30 p-6 rounded-xl space-y-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
-          
+
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <span className="text-[9px] font-bold font-mono tracking-widest text-primary uppercase">ACTIVE TOURNAMENT RECORD</span>
               <h3 className="text-lg font-bold text-white uppercase">{tournament.name}</h3>
-              <p className="text-xs text-gray-400">Sport: {tournament.sport} • Format: {tournament.format}</p>
+              <p className="text-xs text-gray-400">Sport: {tournament.sport} â€¢ Format: {tournament.format}</p>
             </div>
             <span className="px-3 py-1 rounded bg-status-green/10 border border-status-green/30 text-status-green text-xs font-extrabold uppercase tracking-wider animate-pulse">
               {tournament.status}
@@ -123,7 +123,7 @@ export const TournamentWizard: React.FC<TournamentWizardProps> = ({
       ) : (
         /* Tournament Seed Setup Options */
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          
+
           {/* Quick Start Seed Card */}
           <div className="md:col-span-2 bg-gradient-to-br from-surface to-background border border-border p-6 rounded-xl flex flex-col justify-between space-y-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -157,7 +157,7 @@ export const TournamentWizard: React.FC<TournamentWizardProps> = ({
           <div className="md:col-span-3 bg-surface border border-border p-6 rounded-xl">
             <form onSubmit={handleSubmit} className="space-y-4">
               <h3 className="text-sm font-bold text-white uppercase pb-2 border-b border-border">Custom Tournament Config</h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[9px] text-gray-400 font-mono uppercase font-semibold">Tournament Name</label>

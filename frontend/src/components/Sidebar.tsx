@@ -1,15 +1,15 @@
-import React from 'react';
-import { 
-  LayoutDashboard, 
-  Trophy, 
-  Calendar, 
-  Activity, 
-  Users, 
-  AlertOctagon, 
-  Cpu, 
-  Bell, 
-  BarChart3, 
-  FileText, 
+﻿import React from 'react';
+import {
+  LayoutDashboard,
+  Trophy,
+  Calendar,
+  Activity,
+  Users,
+  AlertOctagon,
+  Cpu,
+  Bell,
+  BarChart3,
+  FileText,
   Settings,
   Wifi,
   WifiOff,
@@ -51,7 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-64 bg-surface border-r border-border h-screen flex flex-col justify-between select-none relative z-25">
+    <aside className="w-64 bg-surface border-r border-border h-screen flex flex-col justify-between relative z-25">
       {/* Brand Header */}
       <div>
         <div className="h-16 flex items-center px-6 border-b border-border gap-2.5">
@@ -114,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* WebSocket Connection Status indicator */}
-        <div className="flex items-center justify-between pt-1 text-[9px] font-mono tracking-widest text-gray-500 uppercase select-none">
+        <div className="flex items-center justify-between pt-1 text-[9px] font-mono tracking-widest text-gray-500 uppercase">
           <span>System Status:</span>
           {wsConnected ? (
             <span className="flex items-center gap-1 text-status-green font-bold">

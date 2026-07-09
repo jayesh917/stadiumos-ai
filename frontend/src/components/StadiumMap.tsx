@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { CrowdZone } from '../types';
 import { Shield, Users, Activity, TrendingUp, AlertTriangle } from 'lucide-react';
 
@@ -30,13 +30,13 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({ zones, selectedZone, onS
   const renderZoneSVG = (id: string, path: string, labelX: number, labelY: number, labelText: string) => {
     const zone = getZoneByName(id);
     if (!zone) return null;
-    
+
     const isSelected = selectedZone?.id === id;
     const colorClasses = getZoneColor(zone.status);
     const borderWeight = isSelected ? 'stroke-[3px]' : 'stroke-[1.5px]';
 
     return (
-      <g 
+      <g
         className="cursor-pointer transition-all duration-300 group"
         onClick={() => onSelectZone(zone)}
         id={`svg-zone-${id}`}
@@ -60,7 +60,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({ zones, selectedZone, onS
           x={labelX}
           y={labelY + 4}
           textAnchor="middle"
-          className="fill-gray-300 text-[10px] font-medium tracking-wider select-none font-sans pointer-events-none"
+          className="fill-gray-300 text-[10px] font-medium tracking-wider font-sans pointer-events-none"
         >
           {labelText}
         </text>
@@ -69,9 +69,9 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({ zones, selectedZone, onS
           x={labelX}
           y={labelY + 24}
           textAnchor="middle"
-          className={`text-[9px] font-bold select-none pointer-events-none ${
-            zone.status === 'CRITICAL' ? 'fill-status-red' : 
-            zone.status === 'HIGH' ? 'fill-status-amber' : 
+          className={`text-[9px] font-bold pointer-events-none ${
+            zone.status === 'CRITICAL' ? 'fill-status-red' :
+            zone.status === 'HIGH' ? 'fill-status-amber' :
             'fill-primary'
           }`}
         >
@@ -85,12 +85,12 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({ zones, selectedZone, onS
     <div className="relative w-full h-[320px] bg-surface rounded-xl border border-border p-4 flex flex-col items-center justify-center overflow-hidden">
       {/* HUD scan overlay */}
       <div className="absolute inset-0 scan-line pointer-events-none opacity-20"></div>
-      
+
       {/* Grid Pattern Background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2d42_1px,transparent_1px),linear-gradient(to_bottom,#1f2d42_1px,transparent_1px)] bg-[size:30px_30px] opacity-10"></div>
-      
+
       {/* Status Bar */}
-      <div className="absolute top-3 left-4 flex gap-3 text-[10px] font-semibold tracking-wider text-gray-400 select-none">
+      <div className="absolute top-3 left-4 flex gap-3 text-[10px] font-semibold tracking-wider text-gray-400">
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-status-green animate-pulse"></span> NORMAL</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-status-amber"></span> WARNING</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-status-red animate-ping"></span> CRITICAL</span>
@@ -103,7 +103,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({ zones, selectedZone, onS
       {/* SVG Stadium Map */}
       <svg
         viewBox="0 0 600 360"
-        className="w-full h-full max-w-[550px] relative z-10 select-none"
+        className="w-full h-full max-w-[550px] relative z-10"
       >
         {/* Pitch / Field in the middle */}
         <rect

@@ -1,16 +1,16 @@
-import React from 'react';
+﻿import React from 'react';
 import { CrowdZone, Incident, OperationalEvent, Alert, AIRecommendation, AnalyticsData, Match } from '../types';
 import { StadiumMap } from './StadiumMap';
-import { 
-  Users, 
-  AlertTriangle, 
-  Clock, 
-  Activity, 
-  HelpCircle, 
-  Cpu, 
-  ChevronRight, 
-  UserPlus, 
-  TrendingUp, 
+import {
+  Users,
+  AlertTriangle,
+  Clock,
+  Activity,
+  HelpCircle,
+  Cpu,
+  ChevronRight,
+  UserPlus,
+  TrendingUp,
   Volume2
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -45,18 +45,18 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
     const hasCriticalIncident = incidents.some(i => i.priority === 'Critical' && i.status !== 'RESOLVED');
     const hasCriticalZone = zones.some(z => z.status === 'CRITICAL');
     const hasActiveAlerts = alerts.some(a => a.severity === 'Critical' && !a.resolved);
-    
+
     if (hasCriticalIncident || hasCriticalZone || hasActiveAlerts) {
       return { label: 'CRITICAL OPERATIONS RISK', color: 'bg-status-red text-white border-status-red pulse-red' };
     }
-    
+
     const hasHighIncident = incidents.some(i => i.priority === 'High' && i.status !== 'RESOLVED');
     const hasHighZone = zones.some(z => z.status === 'HIGH');
-    
+
     if (hasHighIncident || hasHighZone) {
       return { label: 'ELEVATED OPERATIONS RISK', color: 'bg-status-amber text-black border-status-amber glow-amber' };
     }
-    
+
     return { label: 'SYSTEM NOMINAL', color: 'bg-status-green/20 text-status-green border-status-green glow-green' };
   };
 
@@ -65,7 +65,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   // Active Matches
   const activeMatches = matches.filter(m => m.status === 'Live');
   const delayedMatches = matches.filter(m => m.status === 'Delayed');
-  
+
   // Total occupancy calculation
   const stands = zones.filter(z => z.id.includes('stand'));
   const totalOccupancy = stands.reduce((sum, z) => sum + z.current_occupancy, 0);
@@ -84,13 +84,13 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   }));
 
   // Find if there is an active crowd recommendation for the selected zone
-  const activeZoneRec = selectedZone 
+  const activeZoneRec = selectedZone
     ? recs.find(r => r.scenario_type === 'crowd' && r.status === 'Pending' && r.evidence.some(e => e.includes(selectedZone.name)))
     : null;
 
   return (
-    <div className="space-y-6 select-none font-sans" id="command-center-root">
-      
+    <div className="space-y-6 font-sans" id="command-center-root">
+
       {/* Top Banner Status Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface p-4 rounded-xl border border-border">
         <div>
@@ -156,8 +156,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           </div>
           <div className="flex items-baseline gap-2 mt-1">
             <span className={`text-2xl font-bold tracking-tight ${
-              analytics.schedule_disruption_score > 60 ? 'text-status-red' : 
-              analytics.schedule_disruption_score > 30 ? 'text-status-amber' : 
+              analytics.schedule_disruption_score > 60 ? 'text-status-red' :
+              analytics.schedule_disruption_score > 30 ? 'text-status-amber' :
               'text-status-green'
             }`}>
               {analytics.schedule_disruption_score}/100
@@ -171,20 +171,20 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
 
       {/* Main Grid: Map & Details Panel */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
+
         {/* Left Side: Map and Charts */}
         <div className="xl:col-span-2 space-y-6">
-          
+
           {/* Interactive Stadium Map Box */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold tracking-widest text-primary font-mono uppercase">Live Stadium Zone Telemetry</h3>
               <p className="text-[10px] text-gray-500">Click stand or gate to open details</p>
             </div>
-            <StadiumMap 
-              zones={zones} 
-              selectedZone={selectedZone} 
-              onSelectZone={setSelectedZone} 
+            <StadiumMap
+              zones={zones}
+              selectedZone={selectedZone}
+              onSelectZone={setSelectedZone}
             />
           </div>
 
@@ -196,14 +196,14 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                 <BarChart data={zoneChartData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
                   <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 9 }} axisLine={false} tickLine={false} />
                   <YAxis domain={[0, 100]} tick={{ fill: '#9ca3af', fontSize: 9 }} axisLine={false} tickLine={false} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#0f1622', borderColor: '#1f2d42', borderRadius: '8px' }}
                     labelStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
                     itemStyle={{ color: '#00d2ff', fontSize: '10px' }}
                   />
-                  <Bar 
-                    dataKey="ratio" 
-                    fill="#0099ff" 
+                  <Bar
+                    dataKey="ratio"
+                    fill="#0099ff"
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
@@ -215,7 +215,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
 
         {/* Right Side: Zone Details / Recommendations Drawer */}
         <div className="space-y-6">
-          
+
           {/* Zone Detail Panel */}
           <div className="bg-surface border border-border p-5 rounded-xl min-h-[300px] flex flex-col justify-between">
             {selectedZone ? (
@@ -272,13 +272,13 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     </div>
                     <p className="text-[10px] text-gray-300 leading-relaxed font-sans">{activeZoneRec.summary}</p>
                     <div className="pt-1.5 flex gap-2">
-                      <button 
+                      <button
                         onClick={() => onApplyCrowdAction(activeZoneRec.id)}
                         className="bg-status-blue text-black hover:bg-status-blue/80 text-[9px] font-extrabold uppercase px-2.5 py-1 rounded transition-colors"
                       >
                         Approve Action Plan
                       </button>
-                      <button 
+                      <button
                         onClick={() => onNavigateToTab('ai-copilot')}
                         className="border border-status-blue/40 hover:bg-status-blue/10 text-status-blue text-[9px] font-extrabold uppercase px-2 py-1 rounded transition-colors"
                       >
@@ -299,10 +299,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                 <p className="text-[10px] text-gray-500 mt-1 max-w-[200px]">Click any zone on the stadium grid to view live occupancies and security logs.</p>
               </div>
             )}
-            
+
             {/* Quick action buttons at bottom of drawer */}
             {selectedZone && (
-              <button 
+              <button
                 onClick={() => setSelectedZone(null)}
                 className="w-full bg-surface-light border border-border text-[9px] text-gray-400 hover:text-white uppercase font-extrabold py-2 mt-4 rounded hover:bg-border/30 transition-colors"
               >
@@ -320,7 +320,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             <div className="space-y-2">
               {recs.filter(r => r.status === 'Pending').length > 0 ? (
                 recs.filter(r => r.status === 'Pending').map(r => (
-                  <div 
+                  <div
                     key={r.id}
                     onClick={() => onNavigateToTab(r.scenario_type === 'schedule' ? 'scheduler' : 'ai-copilot')}
                     className="p-2.5 bg-background/50 hover:bg-background/80 rounded border border-border hover:border-primary/30 transition-all cursor-pointer flex items-center justify-between group"
@@ -348,7 +348,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
 
       {/* Footer Grid: Alerts Feed & Event logs */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         {/* Live Alerts Feed */}
         <div className="bg-surface border border-border p-4 rounded-xl space-y-3">
           <h3 className="text-xs font-bold tracking-widest text-status-red font-mono uppercase">Priority Alerts (Active)</h3>

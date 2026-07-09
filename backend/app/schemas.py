@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
+﻿from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any, Dict, Literal
 
 # User
 class UserBase(BaseModel):
@@ -89,13 +89,13 @@ class MatchResponse(BaseModel):
         from_attributes = True
 
 class MatchDelayRequest(BaseModel):
-    delay_minutes: int
-    delay_reason: str
+    delay_minutes: int = Field(..., ge=1, le=480)
+    delay_reason: str = Field(..., min_length=3, max_length=200)
 
 class MatchStatusUpdateRequest(BaseModel):
-    status: str
-    score_a: Optional[int] = None
-    score_b: Optional[int] = None
+    status: Literal['Scheduled', 'Live', 'Delayed', 'Completed']
+    score_a: Optional[int] = Field(None, ge=0, le=150)
+    score_b: Optional[int] = Field(None, ge=0, le=150)
 
 # CrowdZone
 class CrowdZoneBase(BaseModel):
@@ -129,10 +129,10 @@ class ResponseTeamResponse(ResponseTeamBase):
 
 # Incident
 class IncidentCreate(BaseModel):
-    type: str # Medical, Security, Crowd, Equipment, Infrastructure, Lost Person
-    location: str
-    description: str
-    priority: str # Low, Medium, High, Critical
+    type: Literal['Medical', 'Security', 'Crowd', 'Equipment', 'Infrastructure', 'Lost Person']
+    location: str = Field(..., min_length=2, max_length=100)
+    description: str = Field(..., min_length=5, max_length=500)
+    priority: Literal['Low', 'Medium', 'High', 'Critical']
 
 class IncidentResponse(BaseModel):
     id: int
@@ -266,7 +266,7 @@ class ScheduleConflictsResponse(BaseModel):
 
 # AI Copilot schemas
 class CopilotQueryRequest(BaseModel):
-    query: str
+    query: str = Field(..., min_length=1, max_length=1000)
 
 class CopilotAction(BaseModel):
     action: str

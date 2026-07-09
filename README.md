@@ -1,4 +1,4 @@
-# StadiumOS AI 🏟️
+﻿# StadiumOS AI ðŸŸï¸
 ### AI-Powered Command Center for Smart Stadiums & Tournament Operations
 
 StadiumOS AI is a polished, demo-ready hackathon command center built for tournament organizers, venue operations staff, security coordinators, and medical dispatch teams. It merges match scheduling, digital-twin crowd telemetry, incident triage, and AI-driven resolution workflows.
@@ -6,10 +6,10 @@ StadiumOS AI is a polished, demo-ready hackathon command center built for tourna
 ---
 
 ## 30-Second Elevator Pitch
-> *"Traditional stadium operations rely on fragmented walkie-talkies, whiteboards, and static spreadsheets. When match delays occur or gates bottlenecks form, staff struggle to predict downstream conflicts or coordinate emergency units. 
+> *"Traditional stadium operations rely on fragmented walkie-talkies, whiteboards, and static spreadsheets. When match delays occur or gates bottlenecks form, staff struggle to predict downstream conflicts or coordinate emergency units.
 >
 > **StadiumOS AI** bridges this gap. It aggregates live match schedules, gate scanning flow rates, and incident report telemetry into a unified reactive state. By coupling an AI rescheduling engine with automated responder assignment matrices, it detects crowd bottlenecks, drafts conflict-free timelines, and dispatches responders instantly.
-> 
+>
 > The result? **42% faster emergency response, 87% lower gate wait times, and 100% collision-free schedule alignment.**"*
 
 ---
@@ -47,12 +47,12 @@ $$\text{Quality Score} = 100 - (\text{Hard Violations} \times 25) - (\text{Soft 
 - **Venue Imbalance**: Evaluates match distribution variance across venues.
 
 ### 2. Crowd Risk Telemetry Score
-Crowd zone risk values (0–100) are evaluated dynamically based on occupancy, scanner rates, and lines:
+Crowd zone risk values (0â€“100) are evaluated dynamically based on occupancy, scanner rates, and lines:
 $$\text{Risk Score} = 0.40 \times \text{Occupancy Ratio} + 0.25 \times \text{Normalized Entry Rate} + 0.20 \times \text{Normalized Queue Length} + 0.15 \times \text{Congestion Trend}$$
-- **0–49 (NORMAL)**: Green status. Nominal spectator circulation.
-- **50–69 (WATCH)**: Yellow status. High spectator activity.
-- **70–84 (HIGH)**: Orange status. Dense lines forming.
-- **85–100 (CRITICAL)**: Blinking Red status. Crowd choking alert. Automatically triggers AI recommendation.
+- **0â€“49 (NORMAL)**: Green status. Nominal spectator circulation.
+- **50â€“69 (WATCH)**: Yellow status. High spectator activity.
+- **70â€“84 (HIGH)**: Orange status. Dense lines forming.
+- **85â€“100 (CRITICAL)**: Blinking Red status. Crowd choking alert. Automatically triggers AI recommendation.
 
 ### 3. Incident Dispatching Matrix
 Incident responder suggestions are evaluated based on specialist type availability and travel duration:
@@ -109,6 +109,35 @@ npm run dev
 
 ### One-Command Startup (Windows)
 Double-click the `start.bat` file in the project root to seed the database and launch both servers concurrently.
+
+
+---
+
+## Production Security, Performance, & Accessibility Upgrades (WCAG 2.2 AA)
+
+To prepare StadiumOS AI for production environments, the following modules have been audited and upgraded:
+
+### 1. Web Accessibility (WCAG 2.2 AA Compliance)
+- **Semantic Structure & Skip Links**: Implemented semantic layout tags (`main`, `header`, `aside`, `nav`) and added a keyboard-accessible **"Skip to main content"** link to facilitate keyboard tab-navigation.
+- **Form Controls & ARIA Roles**: Upgraded toggle switches to use explicit `role="switch"` and `aria-checked` states. Form fields have matching `<label>` descriptors.
+- **Accessibility Settings (Preferences Panel)**: Integrated controls in Settings (with state persistence in `localStorage`) to toggle:
+  - **Larger Typography Mode**: Scales root base fonts proportionally across all tabs.
+  - **High Contrast Borders**: Renders high-contrast dark themes for visually impaired users.
+  - **Reduced Motion**: Disables active visual animations and canvas confetti explosions.
+  - **Sound Alerts**: Synthesizes custom dual-tone operational audios on warnings via the Web Audio API.
+- **Selectable Texts**: Stripped `select-none` utility classes globally to allow operator copy-paste actions.
+
+### 2. Security Hardening
+- **Strict CORS Rules**: Replaced wildcard CORS allowlists with strict origin checks driven by `ALLOWED_ORIGINS` environment variables.
+- **Security Response Headers Middleware**: Added FastAPI middleware to inject security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Content-Security-Policy`.
+- **IP-Based Rate Limiting**: Deployed memory-efficient sliding-window rate-limit checks on expensive route actions (`/api/incidents` and `/api/ai/copilot`) with automated inactive client key pruning to prevent memory bloating.
+- **WebSocket Gateway Safety**: WebSocket requests validate incoming `Origin` headers and enforce a maximum payload limit of 5KB to prevent client flood attacks.
+- **Payload Schema Constraints**: Schema models validate bounds on match scores, incident categories, and maximum text lengths.
+
+### 3. Performance & Query Optimization
+- **Visibility-Aware Polling**: Pauses REST fallback polling entirely when the browser tab is hidden or inactive, reducing CPU cycles and server load.
+- **Query Parallelization**: GET requests inside `fetchAllTelemetry()` run concurrently using `Promise.all`.
+- **Abortable Telemetry Requests**: Employs `AbortController` handles to drop obsolete HTTP queries during page transitions.
 
 ---
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { AuditLog } from '../types';
 import { FileText, Search, ShieldCheck } from 'lucide-react';
 
@@ -22,8 +22,8 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
   });
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 font-sans select-none" id="audit-log-root">
-      
+    <div className="max-w-4xl mx-auto space-y-6 font-sans" id="audit-log-root">
+
       {/* Header Info */}
       <div className="bg-surface border border-border p-6 rounded-xl space-y-2">
         <h2 className="text-xl font-bold tracking-tight text-white uppercase flex items-center gap-2">
@@ -36,7 +36,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
 
       {/* Main logs display */}
       <div className="bg-surface border border-border rounded-xl p-5 space-y-4">
-        
+
         {/* Search Bar */}
         <div className="relative">
           <input

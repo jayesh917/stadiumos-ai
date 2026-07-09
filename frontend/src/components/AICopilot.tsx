@@ -1,21 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Cpu, Send, Sparkles, Loader2, AlertTriangle, ShieldCheck, CheckSquare, Info } from 'lucide-react';
-
-interface CopilotAction {
-  action: string;
-  reason: string;
-  expected_impact: string;
-}
-
-interface CopilotResponse {
-  summary: string;
-  risk_level: string;
-  evidence: string[];
-  recommended_actions: CopilotAction[];
-  affected_entities: string[];
-  confidence: number;
-  requires_confirmation: boolean;
-}
+import { CopilotResponse, CopilotAction } from '../types';
 
 interface AICopilotProps {
   onCopilotQuery: (query: string) => Promise<CopilotResponse>;
@@ -40,7 +25,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ onCopilotQuery, onTriggerT
     if (!text.trim()) return;
     setLoading(true);
     setQuery('');
-    
+
     // Add query to history immediately
     const newHistoryIndex = chatHistory.length;
     setChatHistory(prev => [...prev, { q: text }]);
@@ -86,8 +71,8 @@ export const AICopilot: React.FC<AICopilotProps> = ({ onCopilotQuery, onTriggerT
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 font-sans select-none" id="ai-copilot-root">
-      
+    <div className="max-w-4xl mx-auto space-y-6 font-sans" id="ai-copilot-root">
+
       {/* Header Info */}
       <div className="bg-surface border border-border p-6 rounded-xl space-y-2">
         <h2 className="text-xl font-bold tracking-tight text-white uppercase flex items-center gap-2">
@@ -118,7 +103,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ onCopilotQuery, onTriggerT
 
       {/* Chat Workspace Arena */}
       <div className="bg-surface border border-border rounded-xl h-[450px] flex flex-col justify-between overflow-hidden">
-        
+
         {/* Messages Feed Area */}
         <div className="flex-grow p-5 space-y-6 overflow-y-auto bg-background/25">
           {chatHistory.length > 0 ? (
@@ -134,7 +119,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ onCopilotQuery, onTriggerT
                 {/* AI Response Card */}
                 <div className="flex justify-start">
                   <div className="w-full max-w-[95%] bg-surface border border-border rounded-xl p-5 space-y-4">
-                    
+
                     {/* Header: AI status & confidence */}
                     <div className="flex items-center justify-between pb-3 border-b border-border/40">
                       <div className="flex items-center gap-2">
@@ -143,7 +128,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ onCopilotQuery, onTriggerT
                         </div>
                         <span className="text-[10px] font-extrabold text-white tracking-widest font-mono uppercase">STADIUMOS COPILOT</span>
                       </div>
-                      
+
                       {chat.r && (
                         <div className="flex items-center gap-3">
                           <span className={`px-2 py-0.5 rounded border text-[8px] font-extrabold uppercase ${getRiskColor(chat.r.risk_level)}`}>
@@ -169,7 +154,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ onCopilotQuery, onTriggerT
                       <div className="space-y-4">
                         {/* Summary */}
                         <p className="text-xs text-gray-200 leading-relaxed font-sans font-medium">{chat.r.summary}</p>
-                        
+
                         {/* Evidence Checklist */}
                         {chat.r.evidence && chat.r.evidence.length > 0 && (
                           <div className="space-y-1.5">
@@ -177,7 +162,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ onCopilotQuery, onTriggerT
                             <ul className="space-y-1 pl-1 text-[10px] text-gray-300">
                               {chat.r.evidence.map((ev, eIdx) => (
                                 <li key={eIdx} className="flex gap-2 items-start">
-                                  <span className="text-primary mt-0.5">•</span>
+                                  <span className="text-primary mt-0.5">â€¢</span>
                                   <span>{ev}</span>
                                 </li>
                               ))}
@@ -197,7 +182,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ onCopilotQuery, onTriggerT
                                     <p className="text-[9px] text-gray-400 font-sans leading-relaxed">{act.reason}</p>
                                     <span className="text-[8px] text-primary font-mono uppercase">PROJECTED IMPACT: {act.expected_impact}</span>
                                   </div>
-                                  
+
                                   {/* Quick Apply button if operator confirm is requested */}
                                   {chat.r?.requires_confirmation && (
                                     <button
@@ -212,7 +197,7 @@ export const AICopilot: React.FC<AICopilotProps> = ({ onCopilotQuery, onTriggerT
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Requires Confirmation alert */}
                         {chat.r.requires_confirmation && (
                           <div className="flex items-center gap-2 text-[9px] font-mono text-status-amber uppercase bg-status-amber/5 border border-status-amber/20 px-3 py-2 rounded">

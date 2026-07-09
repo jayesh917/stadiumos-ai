@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { AnalyticsData } from '../types';
 import { BarChart3, TrendingDown, Clock, ShieldCheck, Zap, Users, Trophy } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -15,8 +15,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ analytics }) => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 font-sans select-none" id="analytics-root">
-      
+    <div className="max-w-4xl mx-auto space-y-6 font-sans" id="analytics-root">
+
       {/* Header Info */}
       <div className="bg-surface border border-border p-6 rounded-xl space-y-2">
         <h2 className="text-xl font-bold tracking-tight text-white uppercase flex items-center gap-2">
@@ -29,7 +29,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ analytics }) => {
 
       {/* Headline Impact Summaries */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* Metric 1 */}
         <div className="bg-surface border border-border p-5 rounded-xl flex items-start gap-4">
           <div className="w-10 h-10 rounded-lg bg-status-green/10 flex items-center justify-center flex-shrink-0 border border-status-green/20">
@@ -76,7 +76,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ analytics }) => {
 
       {/* Telemetry charts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* Left: Traditional vs StadiumOS AI comparative chart */}
         <div className="md:col-span-2 bg-surface border border-border rounded-xl p-5 space-y-4">
           <h3 className="text-xs font-bold tracking-widest text-gray-400 font-mono uppercase">Operational KPI Comparison (mins)</h3>
@@ -97,7 +97,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ analytics }) => {
         {/* Right: Operations Quality summary widgets */}
         <div className="bg-surface border border-border rounded-xl p-5 space-y-4 flex flex-col justify-between">
           <h3 className="text-xs font-bold tracking-widest text-gray-400 font-mono uppercase">Operational Safety Stats</h3>
-          
+
           <div className="space-y-4 flex-grow justify-center flex flex-col">
             {/* Stat 1 */}
             <div className="flex items-center justify-between border-b border-border/40 pb-2">

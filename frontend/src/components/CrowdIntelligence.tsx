@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { CrowdZone, AIRecommendation } from '../types';
-import { 
-  Users, 
-  HelpCircle, 
-  Activity, 
-  Cpu, 
-  CheckCircle, 
+import {
+  Users,
+  HelpCircle,
+  Activity,
+  Cpu,
+  CheckCircle,
   AlertTriangle,
   Flame,
   ArrowRight,
@@ -73,8 +73,8 @@ export const CrowdIntelligence: React.FC<CrowdIntelligenceProps> = ({
   ];
 
   return (
-    <div className="space-y-6 font-sans select-none" id="crowd-intelligence-root">
-      
+    <div className="space-y-6 font-sans" id="crowd-intelligence-root">
+
       {/* Header Info */}
       <div className="bg-surface border border-border p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -114,7 +114,7 @@ export const CrowdIntelligence: React.FC<CrowdIntelligenceProps> = ({
 
       {/* Main Grid: Telemetry Matrix & AI Recommendations */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
+
         {/* Left/Middle: Telemetry Matrix */}
         <div className="xl:col-span-2 bg-surface border border-border rounded-xl p-5 space-y-4">
           <div className="flex justify-between items-center pb-2 border-b border-border/40">
@@ -139,7 +139,7 @@ export const CrowdIntelligence: React.FC<CrowdIntelligenceProps> = ({
                   <tr key={z.id} className="hover:bg-background/25 transition-colors">
                     <td className="py-2.5 font-bold uppercase">{z.name}</td>
                     <td className="py-2.5 text-gray-300">
-                      {Math.round(z.occupancy_ratio * 100)}% 
+                      {Math.round(z.occupancy_ratio * 100)}%
                       <span className="text-[9px] text-gray-500 font-mono ml-1">({z.current_occupancy.toLocaleString()} pax)</span>
                     </td>
                     <td className="py-2.5 text-gray-400 font-mono">
@@ -218,7 +218,7 @@ export const CrowdIntelligence: React.FC<CrowdIntelligenceProps> = ({
                 >
                   {showProjection ? 'Hide Simulation Graphs' : 'Simulate Projected Impact'}
                 </button>
-                
+
                 {showProjection && (
                   <div className="bg-background/50 p-2.5 rounded-lg border border-border animate-fadeIn space-y-3">
                     <h5 className="text-[9px] text-status-blue font-mono uppercase text-center">Wait times & queue comparison (Before vs After)</h5>

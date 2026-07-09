@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { CommandCenter } from './components/CommandCenter';
 import { TournamentWizard } from './components/TournamentWizard';
@@ -13,32 +13,38 @@ import { AuditLogView } from './components/AuditLogView';
 import { Settings } from './components/Settings';
 import { useWebSocket } from './websocket';
 import { API_BASE_URL } from './config';
-import { 
-  User, 
-  Tournament, 
-  Match, 
-  CrowdZone, 
-  Incident, 
-  ResponseTeam, 
-  Alert, 
-  AIRecommendation, 
-  Notification, 
-  OperationalEvent, 
-  AuditLog, 
-  AnalyticsData 
+import {
+  User,
+  Tournament,
+  Match,
+  CrowdZone,
+  Incident,
+  ResponseTeam,
+  Alert,
+  AIRecommendation,
+  Notification,
+  OperationalEvent,
+  AuditLog,
+  AnalyticsData,
+  ConflictDetail,
+  RescheduleImpact,
+  CopilotResponse
 } from './types';
-import { 
-  Play, 
-  SkipForward, 
-  RotateCcw, 
-  Sparkles, 
-  ChevronRight, 
+import {
+  Play,
+  SkipForward,
+  RotateCcw,
+  Sparkles,
+  ChevronRight,
   Info,
   Pause,
   AlertTriangle,
   Flame,
   Activity,
-  HeartPulse
+  HeartPulse,
+  Volume2,
+  VolumeX,
+  Plus
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -58,7 +64,7 @@ export default function App() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [events, setEvents] = useState<OperationalEvent[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  
+
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     avg_incident_response_time_mins: 4.2,
     schedule_conflicts_prevented: 5,
@@ -70,48 +76,201 @@ export default function App() {
   });
 
   // Scheduling propose state
-  const [scheduleProposal, setScheduleProposal] = useState<any | null>(null);
+  const [scheduleProposal, setScheduleProposal] = useState<RescheduleImpact | null>(null);
   const [qualityScore, setQualityScore] = useState(100);
-  const [scheduleConflicts, setScheduleConflicts] = useState<any[]>([]);
+  const [scheduleConflicts, setScheduleConflicts] = useState<ConflictDetail[]>([]);
 
   // Demo step control state
   const [currentDemoStep, setCurrentDemoStep] = useState(0);
   const [autoPlay, setAutoPlay] = useState(false);
+  const [isDemoActionRunning, setIsDemoActionRunning] = useState(false);
+
+  // Accessibility state
+  const [largeText, setLargeText] = useState(() => localStorage.getItem('stadiumos-large-text') === 'true');
+  const [highContrast, setHighContrast] = useState(() => localStorage.getItem('stadiumos-high-contrast') === 'true');
+  const [reducedMotion, setReducedMotion] = useState(() => localStorage.getItem('stadiumos-reduced-motion') === 'true');
+  const [soundAlerts, setSoundAlerts] = useState(() => localStorage.getItem('stadiumos-sound-alerts') !== 'false');
+
+  // Emergency state
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+  const [emergencyCategory, setEmergencyCategory] = useState('Medical Emergency');
+  const [emergencyLocation, setEmergencyLocation] = useState('East Stand');
+  const [emergencyDescription, setEmergencyDescription] = useState('');
+  const [isReportingEmergency, setIsReportingEmergency] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('Stadium operations workspace ready.');
 
   // Base API configuration
   const API_BASE = `${API_BASE_URL}/api`;
 
-  // REST API Telemetry Fetchers
-  const fetchAllTelemetry = async () => {
+  const prefersReducedMotion = useCallback(() => {
+    return reducedMotion || (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }, [reducedMotion]);
+
+  const celebrate = useCallback((options?: any) => {
+    if (!prefersReducedMotion()) {
+      confetti(options);
+    }
+  }, [prefersReducedMotion]);
+
+  // Operational sound alert function using Web Audio oscillator synthesis
+  const playAlertSound = useCallback(() => {
+    if (!soundAlerts || typeof window === 'undefined') return;
     try {
-      // Tournaments
-      const tRes = await fetch(`${API_BASE}/tournaments`);
-      const tData = await tRes.json();
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.45);
+    } catch (e) {
+      console.warn('Audio alert failed', e);
+    }
+  }, [soundAlerts]);
+
+  // Effects to synchronize preferences
+  useEffect(() => {
+    if (largeText) {
+      document.documentElement.style.fontSize = '18px';
+      document.documentElement.classList.add('large-text');
+    } else {
+      document.documentElement.style.fontSize = '16px';
+      document.documentElement.classList.remove('large-text');
+    }
+    localStorage.setItem('stadiumos-large-text', String(largeText));
+  }, [largeText]);
+
+  useEffect(() => {
+    if (highContrast) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
+    localStorage.setItem('stadiumos-high-contrast', String(highContrast));
+  }, [highContrast]);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      document.documentElement.classList.add('reduced-motion');
+    } else {
+      document.documentElement.classList.remove('reduced-motion');
+    }
+    localStorage.setItem('stadiumos-reduced-motion', String(reducedMotion));
+  }, [reducedMotion]);
+
+  useEffect(() => {
+    localStorage.setItem('stadiumos-sound-alerts', String(soundAlerts));
+  }, [soundAlerts]);
+
+  // Keyboard handlers and focus trap for the Emergency Modal
+  useEffect(() => {
+    if (!showEmergencyModal) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowEmergencyModal(false);
+      }
+      if (e.key === 'Tab') {
+        const modal = document.querySelector('[role="dialog"]');
+        if (!modal) return;
+        const focusables = modal.querySelectorAll('button, select, textarea');
+        if (focusables.length === 0) return;
+        const first = focusables[0] as HTMLElement;
+        const last = focusables[focusables.length - 1] as HTMLElement;
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            last.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === last) {
+            first.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    const select = document.getElementById('emergency-cat');
+    if (select) {
+      setTimeout(() => select.focus(), 50);
+    }
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showEmergencyModal]);
+
+
+  const fetchInProgressRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const fetchJSON = useCallback(
+    async <T,>(path: string, options?: RequestInit): Promise<T> => {
+      const signal = abortControllerRef.current?.signal;
+      const res = await fetch(`${API_BASE}${path}`, { ...options, signal });
+      if (!res.ok) {
+        throw new Error(`Request failed for ${path} with status ${res.status}`);
+      }
+      return res.json() as Promise<T>;
+    },
+    [API_BASE]
+  );
+
+  const fetchAllTelemetry = useCallback(async () => {
+    if (fetchInProgressRef.current) return;
+    fetchInProgressRef.current = true;
+
+    // Cancel previous ongoing fetch
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const [
+        tData,
+        mData,
+        cData,
+        zData,
+        iData,
+        nData,
+        eData,
+        auData,
+        anData
+      ] = await Promise.all([
+        fetchJSON<Tournament[]>('/tournaments'),
+        fetchJSON<Match[]>('/matches'),
+        fetchJSON<{ schedule_quality: number; conflicts: ConflictDetail[] }>('/schedule/conflicts'),
+        fetchJSON<CrowdZone[]>('/crowd/zones'),
+        fetchJSON<Incident[]>('/incidents'),
+        fetchJSON<Notification[]>('/notifications'),
+        fetchJSON<OperationalEvent[]>('/events'),
+        fetchJSON<AuditLog[]>('/audit'),
+        fetchJSON<AnalyticsData>('/analytics')
+      ]);
+
       if (tData.length > 0) setTournament(tData[0]);
       else setTournament(null);
 
-      // Matches
-      const mRes = await fetch(`${API_BASE}/matches`);
-      setMatches(await mRes.json());
-
-      // Conflicts
-      const cRes = await fetch(`${API_BASE}/schedule/conflicts`);
-      const cData = await cRes.json();
+      setMatches(mData);
       setQualityScore(cData.schedule_quality);
       setScheduleConflicts(cData.conflicts);
+      setZones(zData);
+      setIncidents(iData);
 
-      // Crowd Zones
-      const zRes = await fetch(`${API_BASE}/crowd/zones`);
-      setZones(await zRes.json());
-
-      // Incidents
-      const iRes = await fetch(`${API_BASE}/incidents`);
-      setIncidents(await iRes.json());
-
-      // Responders
-      // Since backend responder models are bound to Incident response team relational references, we fetch them via database query
-      const rRes = await fetch(`${API_BASE}/incidents`); // fallback fetch
-      // We also mock responder state fetch internally
+      // Sync mock responders
       const mockResponders: ResponseTeam[] = [
         { id: 1, name: 'Medical Alpha', type: 'Medical', location: 'West Stand', status: 'Available' },
         { id: 2, name: 'Medical Bravo', type: 'Medical', location: 'East Stand', status: 'Available' },
@@ -119,8 +278,8 @@ export default function App() {
         { id: 4, name: 'Security Team 2', type: 'Security', location: 'Entry Gate B', status: 'Available' },
         { id: 5, name: 'Technical Operations', type: 'Technical', location: 'Food Court', status: 'Available' }
       ];
-      // Sync responders busy state with incidents list
-      const activeIncidents = incidents.filter(inc => inc.status === 'ASSIGNED');
+
+      const activeIncidents = iData.filter(inc => inc.status === 'ASSIGNED');
       activeIncidents.forEach(inc => {
         if (inc.assigned_responder_id) {
           const resp = mockResponders.find(r => r.id === inc.assigned_responder_id);
@@ -129,47 +288,63 @@ export default function App() {
       });
       setResponders(mockResponders);
 
-      // Notifications
-      const nRes = await fetch(`${API_BASE}/notifications`);
-      setNotifications(await nRes.json());
+      setNotifications(nData);
+      setEvents(eData);
+      setAuditLogs(auData);
+      setAnalytics(anData);
 
-      // Events
-      const eRes = await fetch(`${API_BASE}/events`);
-      setEvents(await eRes.json());
-
-      // Audits
-      const auRes = await fetch(`${API_BASE}/audit`);
-      setAuditLogs(await auRes.json());
-
-      // Analytics
-      const anRes = await fetch(`${API_BASE}/analytics`);
-      setAnalytics(await anRes.json());
-
-    } catch (err) {
-      console.warn('Backend API connection offline. Retrying...', err);
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.warn('Backend API connection offline. Retrying...', err);
+      }
+    } finally {
+      fetchInProgressRef.current = false;
     }
-  };
+  }, [fetchJSON]);
 
+  // Polling strategy with hidden page detection
   useEffect(() => {
     fetchAllTelemetry();
-    const interval = setInterval(fetchAllTelemetry, 4000);
-    return () => clearInterval(interval);
-  }, []);
+
+    const interval = setInterval(() => {
+      if (document.hidden) {
+        // Skip polling when page is inactive to save battery/bandwidth
+        return;
+      }
+      fetchAllTelemetry();
+    }, 8000); // 8-second slow fallback interval
+
+    return () => {
+      clearInterval(interval);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchAllTelemetry]);
 
   // WebSockets Telemetry Handler
-  const handleWebSocketEvent = (type: string, data: any) => {
+  const handleWebSocketEvent = useCallback((type: string, data: any) => {
     setWsConnected(true);
     console.log(`WebSocket Telemetry: [${type}]`, data);
-    
+
     switch (type) {
       case 'CROWD_STATE_UPDATED':
         setZones(data);
+        setStatusMessage('Crowd state updated.');
         break;
       case 'CROWD_ALERT_CREATED':
         setAlerts(prev => [data, ...prev]);
+        if (data.severity === 'Critical') {
+          playAlertSound();
+        }
+        setStatusMessage(`New crowd safety warning: ${data.message}`);
         break;
       case 'AI_RECOMMENDATION_CREATED':
         setRecs(prev => [data, ...prev]);
+        if (data.risk_level === 'CRITICAL' || data.risk_level === 'HIGH') {
+          playAlertSound();
+        }
+        setStatusMessage(`AI recommendation issued: ${data.summary}`);
         break;
       case 'NOTIFICATION_CREATED':
         setNotifications(prev => [data, ...prev]);
@@ -186,7 +361,7 @@ export default function App() {
         fetchAllTelemetry();
         break;
     }
-  };
+  }, [fetchAllTelemetry, playAlertSound]);
 
   // Connect WebSocket hook
   useWebSocket(handleWebSocketEvent);
@@ -196,13 +371,14 @@ export default function App() {
     const res = await fetch(`${API_BASE}/tournaments/load-demo`, { method: 'POST' });
     const data = await res.json();
     if (data.status === 'success') {
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      celebrate({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       await fetchAllTelemetry();
       setActiveTab('scheduler');
+      setStatusMessage('Demo tournament loaded successfully. Operations center initialized.');
     }
   };
 
-  const handleCreateTournament = async (formData: any) => {
+  const handleCreateTournament = async (formData: unknown) => {
     const res = await fetch(`${API_BASE}/tournaments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -211,6 +387,7 @@ export default function App() {
     if (res.ok) {
       await fetchAllTelemetry();
       setActiveTab('scheduler');
+      setStatusMessage('Tournament created successfully. Smart scheduler active.');
     }
   };
 
@@ -221,6 +398,7 @@ export default function App() {
       body: JSON.stringify({ status: 'Live' })
     });
     await fetchAllTelemetry();
+    setStatusMessage(`Match ${matchId} has started.`);
   };
 
   const handleEndMatch = async (matchId: string, scoreA: number, scoreB: number) => {
@@ -230,6 +408,7 @@ export default function App() {
       body: JSON.stringify({ status: 'Completed', score_a: scoreA, score_b: scoreB })
     });
     await fetchAllTelemetry();
+    setStatusMessage(`Match ${matchId} ended. Score: ${scoreA} - ${scoreB}.`);
   };
 
   const handleAddDelay = async (matchId: string, delayMinutes: number, reason: string) => {
@@ -239,17 +418,16 @@ export default function App() {
       body: JSON.stringify({ delay_minutes: delayMinutes, delay_reason: reason })
     });
     await fetchAllTelemetry();
+    setStatusMessage(`Recorded ${delayMinutes} mins weather delay for ${matchId}.`);
   };
 
   const handleOptimizeSchedule = async () => {
-    // Delays are applied, call optimization preview
     const res = await fetch(`${API_BASE}/schedule/optimize`, { method: 'POST' });
-    const proposalSchedule = await res.json();
-    
-    // Simulate before vs after metrics
+    await res.json();
+
     const targetMatch = matches.find(m => m.status === 'Delayed');
     const delayMins = targetMatch ? targetMatch.delay_minutes : 40;
-    
+
     const impactRes = await fetch(`${API_BASE}/schedule/simulate-delay?match_id=M08`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -257,9 +435,10 @@ export default function App() {
     });
     const impactData = await impactRes.json();
     setScheduleProposal(impactData);
+    setStatusMessage('AI schedule solver proposal calculated. Review stats comparison.');
   };
 
-  const handleApplyReschedule = async (proposal: any) => {
+  const handleApplyReschedule = async (proposal: RescheduleImpact) => {
     const res = await fetch(`${API_BASE}/schedule/apply-reschedule`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -270,9 +449,10 @@ export default function App() {
       })
     });
     if (res.ok) {
-      confetti({ particleCount: 50, colors: ['#00b0ff', '#00e676'] });
+      celebrate({ particleCount: 50, colors: ['#00b0ff', '#00e676'] });
       setScheduleProposal(null);
       await fetchAllTelemetry();
+      setStatusMessage('Optimized reschedule applied. Schedule quality restored to 100.');
     }
   };
 
@@ -283,6 +463,7 @@ export default function App() {
       body: JSON.stringify({ scenario })
     });
     await fetchAllTelemetry();
+    setStatusMessage(`Crowd simulation scenario triggered: ${scenario}.`);
   };
 
   const handleApplyCrowdAction = async (recId: number) => {
@@ -292,14 +473,14 @@ export default function App() {
       body: JSON.stringify({ recommendation_id: recId })
     });
     if (res.ok) {
-      confetti({ particleCount: 50, colors: ['#00e676', '#00b0ff'] });
-      // Remove applied recommendation from state
+      celebrate({ particleCount: 50, colors: ['#00e676', '#00b0ff'] });
       setRecs(prev => prev.filter(r => r.id !== recId));
       await fetchAllTelemetry();
+      setStatusMessage('AI crowd mitigation deployed. Scanning lanes expanded.');
     }
   };
 
-  const handleReportIncident = async (data: any) => {
+  const handleReportIncident = async (data: Partial<Incident>) => {
     await fetch(`${API_BASE}/incidents`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -315,6 +496,7 @@ export default function App() {
       body: JSON.stringify({ responder_id: responderId })
     });
     await fetchAllTelemetry();
+    setStatusMessage('Incident assigned to emergency team.');
   };
 
   const handleResolveIncident = async (incidentId: number) => {
@@ -324,9 +506,10 @@ export default function App() {
       body: JSON.stringify({ status: 'RESOLVED' })
     });
     await fetchAllTelemetry();
+    setStatusMessage('Incident resolved successfully.');
   };
 
-  const handleCopilotQuery = async (text: string) => {
+  const handleCopilotQuery = async (text: string): Promise<CopilotResponse> => {
     const res = await fetch(`${API_BASE}/ai/copilot`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -358,7 +541,6 @@ export default function App() {
       tab: 'live-operations',
       desc: 'Matches kick off across stadium bowls. Let us start Match M01, M02, M03, and M04 live in their respective arenas.',
       action: async () => {
-        // Start matches
         await handleStartMatch('M01');
         await handleStartMatch('M02');
         await handleStartMatch('M03');
@@ -378,11 +560,9 @@ export default function App() {
       tab: 'crowd-intelligence',
       desc: 'Operator approves the AI action plan. Scanning channels open at Gate C, diverting spectator flow, stabilizing Gate B risk score.',
       action: async () => {
-        // Find crowd rec
         const cr = recs.find(r => r.scenario_type === 'crowd' && r.status === 'Pending');
         if (cr) await handleApplyCrowdAction(cr.id);
         else {
-          // Fallback call
           await fetch(`${API_BASE}/crowd/apply-action`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -397,7 +577,6 @@ export default function App() {
       tab: 'incidents',
       desc: 'Medical emergency reported in East Stand. System evaluates available units, recommending Medical Bravo (ETA: 2 minutes). Operator dispatches Bravo.',
       action: async () => {
-        // Trigger medical incident
         await handleReportIncident({
           type: 'Medical',
           location: 'East Stand',
@@ -411,10 +590,8 @@ export default function App() {
       tab: 'live-operations',
       desc: 'Sudden rainstorm delays Match M08 by 40 minutes. Disruption score surges, and scheduling solver detects venue overlaps.',
       action: async () => {
-        // Resolve incident first for clean demo flow
         const activeMed = incidents.find(i => i.type === 'Medical' && i.status !== 'RESOLVED');
         if (activeMed) {
-          // Assign and resolve
           await handleAssignResponder(activeMed.id, 2);
           await handleResolveIncident(activeMed.id);
         }
@@ -432,44 +609,77 @@ export default function App() {
   ];
 
   const handleNextDemoStep = async () => {
+    if (isDemoActionRunning) return;
+    setIsDemoActionRunning(true);
     const nextStep = (currentDemoStep + 1) % demoSteps.length;
     setCurrentDemoStep(nextStep);
-    
-    // Auto navigate to the correct tab for the step
+
     const targetTab = demoSteps[nextStep].tab;
     setActiveTab(targetTab);
 
-    // Run programmatic step action
-    const stepAction = demoSteps[nextStep].action;
-    if (stepAction) {
-      await stepAction();
+    setStatusMessage(`Running demo step ${nextStep + 1}: ${demoSteps[nextStep].title}`);
+
+    try {
+      const stepAction = demoSteps[nextStep].action;
+      if (stepAction) {
+        await stepAction();
+      }
+      setStatusMessage(`Demo step ${nextStep + 1} completed: ${demoSteps[nextStep].title}`);
+    } catch (error) {
+      console.error(error);
+      setAutoPlay(false);
+      setStatusMessage(`Demo step ${nextStep + 1} failed. Autoplay stopped.`);
+    } finally {
+      setIsDemoActionRunning(false);
     }
   };
 
+  const handlePrevDemoStep = async () => {
+    if (isDemoActionRunning) return;
+    setIsDemoActionRunning(true);
+    const prevStep = (currentDemoStep - 1 + demoSteps.length) % demoSteps.length;
+    setCurrentDemoStep(prevStep);
+
+    const targetTab = demoSteps[prevStep].tab;
+    setActiveTab(targetTab);
+    setStatusMessage(`Navigated back to step ${prevStep + 1}: ${demoSteps[prevStep].title}`);
+    setIsDemoActionRunning(false);
+  };
+
   const handleResetDemo = async () => {
+    if (isDemoActionRunning) return;
+    setIsDemoActionRunning(true);
     setCurrentDemoStep(0);
     setActiveTab('tournaments');
     setScheduleProposal(null);
     setAlerts([]);
     setRecs([]);
     setAutoPlay(false);
-    
-    const res = await fetch(`${API_BASE}/tournaments/load-demo`, { method: 'POST' });
-    if (res.ok) {
-      await fetchAllTelemetry();
+
+    try {
+      const res = await fetch(`${API_BASE}/tournaments/load-demo`, { method: 'POST' });
+      if (res.ok) {
+        await fetchAllTelemetry();
+        setStatusMessage('Demo database reset completed. Fresh operations panel ready.');
+      }
+    } catch (e) {
+      console.error(e);
+      setStatusMessage('Demo reset failed.');
+    } finally {
+      setIsDemoActionRunning(false);
     }
   };
 
   // Auto-play timer effect
   useEffect(() => {
     let timer: number;
-    if (autoPlay) {
+    if (autoPlay && !isDemoActionRunning) {
       timer = window.setInterval(() => {
         handleNextDemoStep();
-      }, 10000); // Step every 10 seconds
+      }, 10000);
     }
     return () => clearInterval(timer);
-  }, [autoPlay, currentDemoStep]);
+  }, [autoPlay, currentDemoStep, isDemoActionRunning]);
 
   // Triggered by Copilot card quick-actions
   const handleTriggerTabAction = async (actionType: string, payload?: any) => {
@@ -484,8 +694,26 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-background text-gray-100 overflow-hidden font-sans select-none">
-      
+    <div className="flex h-screen bg-background text-gray-100 overflow-hidden font-sans">
+
+      {/* Keyboard accessible Skip Link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:text-black focus:px-4 focus:py-2 focus:rounded-md"
+      >
+        Skip to main content
+      </a>
+
+      {/* Screen reader status announcements */}
+      <div
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {statusMessage}
+      </div>
+
       {/* Left Sidebar */}
       <Sidebar
         activeTab={activeTab}
@@ -498,15 +726,15 @@ export default function App() {
       />
 
       {/* Main Command Dashboard Scope */}
-      <main className="flex-grow flex flex-col min-w-0">
-        
+      <main id="main-content" tabIndex={-1} className="flex-grow flex flex-col min-w-0 outline-none">
+
         {/* Top Demo Overlay Bar */}
-        <div className="h-16 border-b border-border bg-surface px-6 flex items-center justify-between relative z-20">
-          
+        <header className="h-16 border-b border-border bg-surface px-6 flex items-center justify-between relative z-20">
+
           {/* Step telemetry info */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-primary/10 to-primary-dark/10 border border-primary/20 rounded-md text-[10px] font-bold text-primary tracking-widest uppercase">
-              <Sparkles className="w-3.5 h-3.5" /> Hackathon Scenario: Step {currentDemoStep + 1}/{demoSteps.length}
+              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> Hackathon Scenario: Step {currentDemoStep + 1}/{demoSteps.length}
             </div>
             <div className="text-[11px] font-bold text-white uppercase hidden lg:block tracking-wide">
               {demoSteps[currentDemoStep].title}
@@ -517,33 +745,69 @@ export default function App() {
           </div>
 
           {/* Interactive controls */}
-          <div className="flex gap-2">
+          <div className="flex gap-2" role="group" aria-label="Demonstration Controls">
             <button
-              onClick={handleResetDemo}
-              className="bg-surface-light border border-border text-gray-400 hover:text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded transition-colors flex items-center gap-1"
+              type="button"
+              onClick={() => setSoundAlerts(!soundAlerts)}
+              aria-pressed={soundAlerts}
+              aria-label={soundAlerts ? 'Mute sound alerts' : 'Unmute sound alerts'}
+              className="min-h-11 bg-surface-light border border-border text-gray-300 hover:text-white px-3 py-1.5 rounded flex items-center gap-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-primary" /> Reset
+              {soundAlerts ? <Volume2 className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> : <VolumeX className="w-3.5 h-3.5 text-gray-500" aria-hidden="true" />}
             </button>
+
             <button
+              type="button"
+              onClick={() => setShowEmergencyModal(true)}
+              className="min-h-11 bg-status-red hover:bg-status-red/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white text-white text-[10px] font-extrabold uppercase px-3 py-1.5 rounded transition-all flex items-center gap-1 shadow shadow-status-red/20"
+            >
+              <Plus className="w-3.5 h-3.5 text-white" aria-hidden="true" /> Report Emergency
+            </button>
+
+            <button
+              type="button"
+              onClick={handleResetDemo}
+              disabled={isDemoActionRunning}
+              className="bg-surface-light border border-border text-gray-400 hover:text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> Reset
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePrevDemoStep}
+              disabled={isDemoActionRunning}
+              className="bg-surface-light border border-border text-gray-400 hover:text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              Back
+            </button>
+
+            <button
+              type="button"
               onClick={() => setAutoPlay(!autoPlay)}
-              className={`text-[10px] font-extrabold uppercase px-3 py-1.5 rounded transition-all flex items-center gap-1 ${
-                autoPlay 
-                  ? 'bg-status-amber text-black' 
-                  : 'bg-surface-light border border-border text-gray-400 hover:text-white'
+              disabled={isDemoActionRunning}
+              aria-pressed={autoPlay}
+              className={`text-[10px] font-extrabold uppercase px-3 py-1.5 rounded transition-all flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                autoPlay
+                  ? 'bg-status-amber text-black'
+                  : 'bg-surface-light border border-border text-gray-300 hover:text-white'
               }`}
             >
-              {autoPlay ? <Pause className="w-3.5 h-3.5 animate-pulse" /> : <Play className="w-3.5 h-3.5 text-status-green" />}
+              {autoPlay ? <Pause className="w-3.5 h-3.5 animate-pulse" aria-hidden="true" /> : <Play className="w-3.5 h-3.5 text-status-green" aria-hidden="true" />}
               {autoPlay ? 'Pause Auto' : 'Auto Play'}
             </button>
+
             <button
+              type="button"
               onClick={handleNextDemoStep}
-              className="bg-primary text-black hover:bg-primary-dark text-[10px] font-extrabold uppercase px-3.5 py-1.5 rounded flex items-center gap-1 shadow shadow-primary/20 transition-all"
+              disabled={isDemoActionRunning}
+              className="bg-primary text-black hover:bg-primary-dark text-[10px] font-extrabold uppercase px-3.5 py-1.5 rounded flex items-center gap-1 shadow shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
-              Next Step <SkipForward className="w-3.5 h-3.5" />
+              {isDemoActionRunning ? 'Running...' : 'Next Step'} <SkipForward className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           </div>
 
-        </div>
+        </header>
 
         {/* Scrollable telemetries content area */}
         <div className="flex-grow overflow-y-auto p-6 bg-background">
@@ -637,11 +901,132 @@ export default function App() {
           )}
 
           {activeTab === 'settings' && (
-            <Settings onResetDemo={handleResetDemo} />
+            <Settings
+              onResetDemo={handleResetDemo}
+              largeText={largeText}
+              setLargeText={setLargeText}
+              highContrast={highContrast}
+              setHighContrast={setHighContrast}
+              reducedMotion={reducedMotion}
+              setReducedMotion={setReducedMotion}
+              soundAlerts={soundAlerts}
+              setSoundAlerts={setSoundAlerts}
+            />
           )}
         </div>
 
       </main>
+
+      {/* Emergency Modal Dialog */}
+      {showEmergencyModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="emergency-dialog-title"
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 font-sans"
+        >
+          <div className="bg-surface border-2 border-status-red max-w-md w-full rounded-xl p-6 space-y-4 shadow-2xl animate-scaleUp">
+            <h2 id="emergency-dialog-title" className="text-lg font-bold text-status-red uppercase flex items-center gap-2">
+              <Flame className="w-5.5 h-5.5 text-status-red animate-pulse" aria-hidden="true" /> Confirm Emergency Dispatch
+            </h2>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label htmlFor="emergency-cat" className="text-[10px] text-gray-400 font-mono uppercase block font-semibold">Incident Category</label>
+                <select
+                  id="emergency-cat"
+                  value={emergencyCategory}
+                  onChange={(e) => setEmergencyCategory(e.target.value)}
+                  className="w-full bg-background border border-border rounded p-2 text-xs text-white"
+                >
+                  <option value="Medical Emergency">Medical Emergency</option>
+                  <option value="Fire / Smoke">Fire / Smoke</option>
+                  <option value="Crowd Crush / Dangerous Congestion">Crowd Crush / Dangerous Congestion</option>
+                  <option value="Security Threat">Security Threat</option>
+                  <option value="Technical / Infrastructure Failure">Technical / Infrastructure Failure</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="emergency-loc" className="text-[10px] text-gray-400 font-mono uppercase block font-semibold">Location / Zone</label>
+                <select
+                  id="emergency-loc"
+                  value={emergencyLocation}
+                  onChange={(e) => setEmergencyLocation(e.target.value)}
+                  className="w-full bg-background border border-border rounded p-2 text-xs text-white"
+                >
+                  <option value="West Stand">West Stand</option>
+                  <option value="East Stand">East Stand</option>
+                  <option value="North Stand">North Stand</option>
+                  <option value="South Stand">South Stand</option>
+                  <option value="Entry Gate A">Entry Gate A</option>
+                  <option value="Entry Gate B">Entry Gate B</option>
+                  <option value="Food Court">Food Court</option>
+                  <option value="Concourse Level 1">Concourse Level 1</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="emergency-desc" className="text-[10px] text-gray-400 font-mono uppercase block font-semibold">Situation Summary</label>
+                <textarea
+                  id="emergency-desc"
+                  placeholder="Provide immediate visual description..."
+                  value={emergencyDescription}
+                  onChange={(e) => setEmergencyDescription(e.target.value)}
+                  className="w-full bg-background border border-border rounded p-2 text-xs text-white h-20 resize-none outline-none focus:border-status-red"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowEmergencyModal(false)}
+                className="w-1/2 min-h-11 bg-surface-light border border-border text-gray-300 hover:text-white font-bold uppercase text-xs rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!emergencyDescription.trim()) {
+                    alert('Please enter a description of the emergency.');
+                    return;
+                  }
+                  setIsReportingEmergency(true);
+                  try {
+                    let type: Incident['type'] = 'Medical';
+                    if (emergencyCategory.includes('Fire')) type = 'Equipment';
+                    else if (emergencyCategory.includes('Crowd')) type = 'Crowd';
+                    else if (emergencyCategory.includes('Security')) type = 'Security';
+                    else if (emergencyCategory.includes('Technical')) type = 'Infrastructure';
+
+                    await handleReportIncident({
+                      type,
+                      location: emergencyLocation,
+                      description: `${emergencyCategory}: ${emergencyDescription}`,
+                      priority: 'Critical'
+                    });
+
+                    playAlertSound();
+                    setShowEmergencyModal(false);
+                    setEmergencyDescription('');
+                    setStatusMessage(`Emergency reported: ${emergencyCategory} at ${emergencyLocation}.`);
+                  } finally {
+                    setIsReportingEmergency(false);
+                  }
+                }}
+                disabled={isReportingEmergency}
+                className="w-1/2 min-h-11 bg-status-red text-white hover:bg-status-red/80 font-bold uppercase text-xs rounded transition-colors disabled:opacity-50"
+              >
+                {isReportingEmergency ? 'Dispatching...' : 'Confirm Dispatch'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

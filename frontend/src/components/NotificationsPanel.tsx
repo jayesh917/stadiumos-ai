@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Notification } from '../types';
 import { Bell, Smartphone, Mail, Send, BellRing } from 'lucide-react';
 
@@ -19,8 +19,8 @@ export const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifica
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 font-sans select-none" id="notifications-root">
-      
+    <div className="max-w-4xl mx-auto space-y-6 font-sans" id="notifications-root">
+
       {/* Header Info */}
       <div className="bg-surface border border-border p-6 rounded-xl space-y-2">
         <h2 className="text-xl font-bold tracking-tight text-white uppercase flex items-center gap-2">
@@ -36,7 +36,7 @@ export const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifica
         <h3 className="text-xs font-bold tracking-widest text-gray-400 font-mono uppercase border-b border-border/40 pb-2">
           Outgoing Telemetry Messages Log ({notifications.length})
         </h3>
-        
+
         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
           {notifications.length > 0 ? (
             notifications.map(n => {
@@ -49,7 +49,7 @@ export const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifica
                     </div>
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-white uppercase tracking-wider block">
-                        Channel: {n.channel} • To: {n.recipient}
+                        Channel: {n.channel} â€¢ To: {n.recipient}
                       </span>
                       <p className="text-[11px] text-gray-300 leading-relaxed">{n.message}</p>
                     </div>

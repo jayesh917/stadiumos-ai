@@ -1,34 +1,17 @@
-import React, { useState } from 'react';
-import { Match, Tournament } from '../types';
-import { 
-  Calendar, 
-  AlertTriangle, 
-  CheckCircle, 
-  Cpu, 
-  Activity, 
+﻿import React, { useState } from 'react';
+import { Match, Tournament, ConflictDetail, RescheduleImpact } from '../types';
+import {
+  Calendar,
+  AlertTriangle,
+  CheckCircle,
+  Cpu,
+  Activity,
   Sparkles,
   ArrowRight,
   TrendingDown,
   Info,
   ChevronDown
 } from 'lucide-react';
-
-interface ConflictDetail {
-  conflict_type: string;
-  affected_teams: string[];
-  affected_venue: string | null;
-  operational_consequence: string;
-  recommended_resolution: string;
-}
-
-interface RescheduleImpact {
-  affected_matches: number;
-  venue_conflicts: number;
-  rest_violations: number;
-  tournament_finish_delay_minutes: number;
-  disruption_score: number;
-  schedule: Match[];
-}
 
 interface SmartSchedulerProps {
   tournament: Tournament | null;
@@ -100,37 +83,40 @@ export const SmartScheduler: React.FC<SmartSchedulerProps> = ({
   }
 
   return (
-    <div className="space-y-6 font-sans select-none" id="smart-scheduler-root">
-      
+    <div className="space-y-6 font-sans" id="smart-scheduler-root">
+
       {/* Top Header Card */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface p-4 rounded-xl border border-border">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-white uppercase flex items-center gap-2">
-            <Calendar className="w-5.5 h-5.5 text-primary" /> Smart Scheduling Engine
+            <Calendar className="w-5.5 h-5.5 text-primary" aria-hidden="true" /> Smart Scheduling Engine
           </h2>
           <p className="text-xs text-gray-400 font-medium">Auto-allocate match time slots, calculate recovery windows, and resolve venue overlaps.</p>
         </div>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={handleGenerate}
             disabled={loading}
-            className="bg-surface-light border border-border text-gray-300 hover:text-white hover:bg-border/30 text-xs font-extrabold uppercase px-4 py-2 rounded transition-colors"
+            className="min-h-11 bg-surface-light border border-border text-gray-300 hover:text-white hover:bg-border/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary text-xs font-extrabold uppercase px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Regenerate Draft
           </button>
           <button
+            type="button"
             onClick={onDetectConflicts}
-            className="bg-surface-light border border-border text-gray-300 hover:text-white hover:bg-border/30 text-xs font-extrabold uppercase px-4 py-2 rounded transition-colors"
+            className="min-h-11 bg-surface-light border border-border text-gray-300 hover:text-white hover:bg-border/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary text-xs font-extrabold uppercase px-4 py-2 rounded transition-colors"
           >
             Scan Conflicts
           </button>
           {!rescheduleProposal && conflicts.length > 0 && (
             <button
+              type="button"
               onClick={handleOptimize}
               disabled={loading}
-              className="bg-primary text-black hover:bg-primary-dark text-xs font-extrabold uppercase px-4 py-2 rounded flex items-center gap-1.5 transition-all shadow-md shadow-primary/25"
+              className="min-h-11 bg-primary text-black hover:bg-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white text-xs font-extrabold uppercase px-4 py-2 rounded flex items-center gap-1.5 transition-all shadow-md shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Cpu className="w-4 h-4" /> Resolve Conflicts
+              <Cpu className="w-4 h-4" aria-hidden="true" /> Resolve Conflicts
             </button>
           )}
         </div>
@@ -140,7 +126,7 @@ export const SmartScheduler: React.FC<SmartSchedulerProps> = ({
       {rescheduleProposal ? (
         /* HERO SCENARIO: Rescheduling Before / After Proposal Viewer */
         <div className="space-y-6 animate-fadeIn">
-          
+
           {/* Comparison Stats Bar */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* KPI 1 */}
@@ -182,15 +168,17 @@ export const SmartScheduler: React.FC<SmartSchedulerProps> = ({
             {/* Action Buttons */}
             <div className="bg-surface border border-primary/20 p-3 rounded-xl flex flex-col justify-center gap-2">
               <button
+                type="button"
                 onClick={handleApply}
                 disabled={loading}
-                className="w-full bg-status-blue hover:bg-status-blue/80 text-black text-[10px] font-extrabold uppercase py-2 rounded transition-colors shadow shadow-status-blue/20"
+                className="w-full min-h-11 bg-status-blue hover:bg-status-blue/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white text-black text-[10px] font-extrabold uppercase py-2 rounded transition-colors shadow shadow-status-blue/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Apply Reschedule
               </button>
               <button
+                type="button"
                 onClick={onClearProposal}
-                className="w-full bg-surface-light border border-border text-gray-400 hover:text-white text-[10px] font-extrabold uppercase py-1.5 rounded transition-colors"
+                className="w-full min-h-11 bg-surface-light border border-border text-gray-300 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary text-[10px] font-extrabold uppercase py-1.5 rounded transition-colors"
               >
                 Discard Proposal
               </button>
@@ -205,9 +193,10 @@ export const SmartScheduler: React.FC<SmartSchedulerProps> = ({
               <p className="text-[11px] text-gray-300 leading-relaxed">
                 By shifting downstream matches chronologically and optimizing across available venues (Apex Bowl and Summit Field), we have cleared the Grand Arena bottleneck. The entire round timeline was shifted to compress the tournament duration, resolving the Rest Time infractions for Blizzard SC.
               </p>
-              <button 
+              <button
+                type="button"
                 onClick={onExplainPlan}
-                className="text-[9px] text-status-blue hover:underline font-bold uppercase tracking-wider block mt-1"
+                className="min-h-11 text-[9px] text-status-blue hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary font-bold uppercase tracking-wider block mt-1"
               >
                 Ask Copilot for detailed verification list &rarr;
               </button>
@@ -294,10 +283,10 @@ export const SmartScheduler: React.FC<SmartSchedulerProps> = ({
       ) : (
         /* STANDARD VIEW: Quality Score, Conflicts Feed, Matches List */
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          
+
           {/* Left Area: Quality Score & Active Conflicts */}
           <div className="xl:col-span-1 space-y-6">
-            
+
             {/* Score HUD Gauge */}
             <div className="bg-surface border border-border p-5 rounded-xl space-y-3">
               <span className="text-[9px] text-gray-500 font-mono tracking-widest uppercase">Schedule Quality Index</span>

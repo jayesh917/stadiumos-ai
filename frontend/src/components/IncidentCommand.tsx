@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Incident, ResponseTeam, AIRecommendation } from '../types';
-import { 
-  AlertOctagon, 
-  Plus, 
-  MapPin, 
-  Clock, 
-  Users, 
-  CheckCircle2, 
-  UserCheck, 
-  Zap, 
+import {
+  AlertOctagon,
+  Plus,
+  MapPin,
+  Clock,
+  Users,
+  CheckCircle2,
+  UserCheck,
+  Zap,
   Loader2,
   Shield,
   HeartPulse,
@@ -35,7 +35,7 @@ export const IncidentCommand: React.FC<IncidentCommandProps> = ({
 }) => {
   const [showReportForm, setShowReportForm] = useState(false);
   const [loading, setLoading] = useState<number | string | null>(null);
-  
+
   // Form State
   const [type, setType] = useState('Medical');
   const [location, setLocation] = useState('East Stand');
@@ -114,8 +114,8 @@ export const IncidentCommand: React.FC<IncidentCommandProps> = ({
   const resolvedIncidents = incidents.filter(i => i.status === 'RESOLVED');
 
   return (
-    <div className="space-y-6 font-sans select-none" id="incident-command-root">
-      
+    <div className="space-y-6 font-sans" id="incident-command-root">
+
       {/* Header Info */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface p-4 rounded-xl border border-border">
         <div>
@@ -151,7 +151,7 @@ export const IncidentCommand: React.FC<IncidentCommandProps> = ({
         <div className="bg-surface border border-border p-5 rounded-xl animate-scaleUp">
           <form onSubmit={handleReportSubmit} className="space-y-4">
             <h3 className="text-xs font-bold text-white uppercase pb-2 border-b border-border/40">Report New Incident Field</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-1">
                 <label className="text-[9px] text-gray-400 font-mono uppercase">Incident Category</label>
@@ -229,10 +229,10 @@ export const IncidentCommand: React.FC<IncidentCommandProps> = ({
 
       {/* Main Grid: Active incidents vs Responders Status */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
+
         {/* Left/Middle Column: Incidents Feeds */}
         <div className="xl:col-span-2 space-y-6">
-          
+
           {/* Active Incidents */}
           <div className="bg-surface border border-border p-5 rounded-xl space-y-4">
             <h3 className="text-xs font-bold tracking-widest text-white uppercase border-b border-border/40 pb-2">
@@ -243,10 +243,10 @@ export const IncidentCommand: React.FC<IncidentCommandProps> = ({
                 unresolvedIncidents.map(inc => {
                   const IncIcon = getIncidentIcon(inc.type);
                   const isWorking = loading === inc.id;
-                  
+
                   // Find AI Recommendation for this incident
                   const incRec = incidentRecs.find(r => r.evidence.some(e => e.includes(inc.description)) && r.status === 'Pending');
-                  
+
                   return (
                     <div key={inc.id} className="bg-background border border-border/80 rounded-xl p-4.5 space-y-3.5 hover:border-primary/20 transition-colors">
                       {/* Meta header */}
@@ -257,7 +257,7 @@ export const IncidentCommand: React.FC<IncidentCommandProps> = ({
                           </div>
                           <div>
                             <h4 className="text-xs font-extrabold text-white uppercase flex items-center gap-2">
-                              INCIDENT #{inc.id} • {inc.type}
+                              INCIDENT #{inc.id} â€¢ {inc.type}
                             </h4>
                             <div className="flex items-center gap-3 mt-0.5 text-[9px] text-gray-500 font-mono uppercase">
                               <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-primary" /> {inc.location}</span>
@@ -290,11 +290,11 @@ export const IncidentCommand: React.FC<IncidentCommandProps> = ({
                             </div>
                             {incRec.recommended_actions.map((act, aIdx) => (
                               <p key={aIdx} className="text-[10px] text-gray-300">
-                                Recommend: <strong className="text-white">{act.action.replace('Dispatch ', '')}</strong> • {act.reason} (ETA: 2m)
+                                Recommend: <strong className="text-white">{act.action.replace('Dispatch ', '')}</strong> â€¢ {act.reason} (ETA: 2m)
                               </p>
                             ))}
                           </div>
-                          
+
                           {/* Approve Dispatch action */}
                           <div className="flex-shrink-0">
                             {responders.filter(r => r.status === 'Available').length > 0 ? (
@@ -374,7 +374,7 @@ export const IncidentCommand: React.FC<IncidentCommandProps> = ({
               {resolvedIncidents.map(inc => (
                 <div key={inc.id} className="text-[10px] border-b border-border/40 pb-2 flex justify-between items-start gap-4">
                   <div>
-                    <span className="font-bold text-gray-300">INCIDENT #{inc.id} ({inc.type})</span> • <span className="text-gray-500 font-mono">{inc.location}</span>
+                    <span className="font-bold text-gray-300">INCIDENT #{inc.id} ({inc.type})</span> â€¢ <span className="text-gray-500 font-mono">{inc.location}</span>
                     <p className="text-gray-400 font-sans mt-0.5">{inc.description}</p>
                     <span className="text-[8px] text-status-green font-mono uppercase mt-1 block">
                       Resolved in {inc.response_time_seconds ? Math.round(inc.response_time_seconds / 60) : 4}m by {inc.responder?.name}

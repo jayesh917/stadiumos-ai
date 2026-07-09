@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Match } from '../types';
 import { Play, Square, Award, Clock, Users, ShieldAlert, AlertOctagon, Loader2, Activity } from 'lucide-react';
 
@@ -18,7 +18,7 @@ export const LiveOperations: React.FC<LiveOperationsProps> = ({
   const [delayModalMatch, setDelayModalMatch] = useState<Match | null>(null);
   const [delayMinutes, setDelayMinutes] = useState(30);
   const [delayReason, setDelayReason] = useState('Inclement Weather');
-  
+
   const [endModalMatch, setEndModalMatch] = useState<Match | null>(null);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
@@ -67,8 +67,8 @@ export const LiveOperations: React.FC<LiveOperationsProps> = ({
   const renderMatchCard = (m: Match) => {
     const isWorking = loading === m.id;
     return (
-      <div 
-        key={m.id} 
+      <div
+        key={m.id}
         className={`bg-surface border p-4.5 rounded-xl flex flex-col justify-between space-y-4 hover:border-primary/30 transition-all ${
           m.status === 'Live' ? 'border-status-blue/40 shadow-md shadow-status-blue/5' :
           m.status === 'Delayed' ? 'border-status-amber/40 shadow-md shadow-status-amber/5' :
@@ -77,7 +77,7 @@ export const LiveOperations: React.FC<LiveOperationsProps> = ({
       >
         {/* Header telemetry info */}
         <div className="flex justify-between items-center text-[10px] text-gray-500 font-mono uppercase tracking-wider pb-2 border-b border-border/40">
-          <span>MATCH {m.id} • ROUND {m.round}</span>
+          <span>MATCH {m.id} â€¢ ROUND {m.round}</span>
           <span className="text-gray-400">{m.venue.name}</span>
         </div>
 
@@ -172,8 +172,8 @@ export const LiveOperations: React.FC<LiveOperationsProps> = ({
   };
 
   return (
-    <div className="space-y-6 font-sans select-none" id="live-operations-root">
-      
+    <div className="space-y-6 font-sans" id="live-operations-root">
+
       {/* Header Info */}
       <div className="bg-surface border border-border p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -186,7 +186,7 @@ export const LiveOperations: React.FC<LiveOperationsProps> = ({
 
       {/* Grid columns of different match scopes */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        
+
         {/* Column 1: Live & Delayed matches */}
         <div className="space-y-4 bg-surface/30 p-4.5 border border-border/80 rounded-xl min-h-[400px]">
           <h3 className="text-xs font-bold tracking-widest text-white uppercase border-b border-border/60 pb-2 flex items-center justify-between">
@@ -239,7 +239,7 @@ export const LiveOperations: React.FC<LiveOperationsProps> = ({
             <h3 className="text-sm font-bold text-white uppercase border-b border-border pb-2 flex items-center gap-2">
               <AlertOctagon className="w-5 h-5 text-status-amber" /> Trigger Match Delay : Match {delayModalMatch.id}
             </h3>
-            
+
             <form onSubmit={handleDelaySubmit} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-[9px] text-gray-400 font-mono uppercase font-semibold">Select Delay Duration</label>
