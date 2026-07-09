@@ -1,24 +1,20 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { WS_BASE_URL } from './config';
 
 type WebSocketCallback = (type: string, data: any) => void;
 
-export function useWebSocket(
-  onEvent: WebSocketCallback,
-  onStatusChange?: (connected: boolean) => void
-) {
+export function useWebSocket(onEvent: WebSocketCallback) {
+  const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
   const retryCountRef = useRef<number>(0);
 
-  // Use refs to store latest callbacks to avoid stale closures in event listeners
+  // Use ref to store latest callback to avoid stale closures in event listeners
   const onEventRef = useRef(onEvent);
-  const onStatusChangeRef = useRef(onStatusChange);
 
   useEffect(() => {
     onEventRef.current = onEvent;
-    onStatusChangeRef.current = onStatusChange;
-  }, [onEvent, onStatusChange]);
+  }, [onEvent]);
 
   const connect = () => {
     // Clear any existing connection first
@@ -56,7 +52,7 @@ export function useWebSocket(
         console.log('WebSocket connection established.');
         retryCountRef.current = 0; // Reset retries on successful connection
         ws.send('ping');
-        onStatusChangeRef.current?.(true);
+        setIsConnected(true);
       };
 
       ws.onmessage = (event) => {
@@ -73,13 +69,13 @@ export function useWebSocket(
 
       ws.onclose = (event) => {
         console.log(`WebSocket connection closed (code: ${event.code}).`);
-        onStatusChangeRef.current?.(false);
+        setIsConnected(false);
         scheduleReconnection();
       };
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        onStatusChangeRef.current?.(false);
+        setIsConnected(false);
         // Closing the socket will trigger onclose, which handles reconnection.
         // If the state is not closed or closing, close it manually.
         try {
@@ -95,7 +91,7 @@ export function useWebSocket(
       };
     } catch (error) {
       console.error('Error during WebSocket initialization:', error);
-      onStatusChangeRef.current?.(false);
+      setIsConnected(false);
       scheduleReconnection();
     }
   };
@@ -113,7 +109,7 @@ export function useWebSocket(
           // ignore
         }
       }
-      onStatusChangeRef.current?.(false);
+      setIsConnected(false);
     };
   }, []);
 
@@ -129,5 +125,5 @@ export function useWebSocket(
     }
   };
 
-  return { sendEvent };
+  return { sendEvent, isConnected };
 }

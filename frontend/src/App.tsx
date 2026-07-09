@@ -51,7 +51,7 @@ import confetti from 'canvas-confetti';
 export default function App() {
   const [activeTab, setActiveTab] = useState('tournaments');
   const [currentUser, setCurrentUser] = useState<User>({ id: 1, username: 'operations', role: 'Operations Manager' });
-  const [wsConnected, setWsConnected] = useState(false);
+
 
   // Core telemetries state
   const [tournament, setTournament] = useState<Tournament | null>(null);
@@ -324,7 +324,6 @@ export default function App() {
 
   // WebSockets Telemetry Handler
   const handleWebSocketEvent = useCallback((type: string, data: any) => {
-    setWsConnected(true);
     console.log(`WebSocket Telemetry: [${type}]`, data);
 
     switch (type) {
@@ -364,7 +363,7 @@ export default function App() {
   }, [fetchAllTelemetry, playAlertSound]);
 
   // Connect WebSocket hook
-  useWebSocket(handleWebSocketEvent, setWsConnected);
+  const { isConnected: wsConnected } = useWebSocket(handleWebSocketEvent);
 
   // REST API Methods binding
   const handleLoadDemo = async () => {
