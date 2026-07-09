@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { CommandCenter } from './components/CommandCenter';
 import { TournamentWizard } from './components/TournamentWizard';
@@ -364,7 +364,7 @@ export default function App() {
   }, [fetchAllTelemetry, playAlertSound]);
 
   // Connect WebSocket hook
-  useWebSocket(handleWebSocketEvent);
+  useWebSocket(handleWebSocketEvent, setWsConnected);
 
   // REST API Methods binding
   const handleLoadDemo = async () => {
