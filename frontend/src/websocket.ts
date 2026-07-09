@@ -1,48 +1,87 @@
 import { useEffect, useRef } from 'react';
+import { WS_BASE_URL } from './config';
 
 type WebSocketCallback = (type: string, data: any) => void;
 
 export function useWebSocket(onEvent: WebSocketCallback) {
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectTimeoutRef = useRef<any>(null);
+  const retryCountRef = useRef<number>(0);
 
   const connect = () => {
-    const wsUrl = `ws://${window.location.hostname}:8000/api/ws`;
+    // Clear any existing connection first
+    if (wsRef.current) {
+      try {
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        wsRef.current.close();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const wsUrl = `${WS_BASE_URL}/api/ws`;
     console.log(`Connecting to WebSocket: ${wsUrl}`);
     
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      console.log('WebSocket connection established.');
-      ws.send('ping');
-    };
-
-    ws.onmessage = (event) => {
-      if (event.data === 'ping' || event.data.startsWith('ACK')) return;
-      try {
-        const payload = JSON.parse(event.data);
-        if (payload && payload.type) {
-          onEvent(payload.type, payload.data);
-        }
-      } catch (err) {
-        console.error('Error parsing WebSocket message:', err);
+    const scheduleReconnection = () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
       }
-    };
-
-    ws.onclose = (event) => {
-      console.log(`WebSocket connection closed (code: ${event.code}). Reconnecting in 3s...`);
-      // Prevent multiple reconnection triggers
-      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      // Bounded delay: exponential backoff starting at 1s, doubling up to a max of 16s
+      const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 16000);
+      console.log(`Scheduling WebSocket reconnection in ${delay}ms (attempt ${retryCountRef.current + 1})`);
       reconnectTimeoutRef.current = window.setTimeout(() => {
+        retryCountRef.current += 1;
         connect();
-      }, 3000);
+      }, delay);
     };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      ws.close();
-    };
+    try {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('WebSocket connection established.');
+        retryCountRef.current = 0; // Reset retries on successful connection
+        ws.send('ping');
+      };
+
+      ws.onmessage = (event) => {
+        if (event.data === 'ping' || event.data.startsWith('ACK')) return;
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload && payload.type) {
+            onEvent(payload.type, payload.data);
+          }
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
+        }
+      };
+
+      ws.onclose = (event) => {
+        console.log(`WebSocket connection closed (code: ${event.code}).`);
+        scheduleReconnection();
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        // Closing the socket will trigger onclose, which handles reconnection.
+        // If the state is not closed or closing, close it manually.
+        try {
+          if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+            ws.close();
+          } else {
+            // If it never managed to start, trigger reconnection here
+            scheduleReconnection();
+          }
+        } catch (e) {
+          scheduleReconnection();
+        }
+      };
+    } catch (error) {
+      console.error('Error during WebSocket initialization:', error);
+      scheduleReconnection();
+    }
   };
 
   useEffect(() => {
@@ -50,15 +89,24 @@ export function useWebSocket(onEvent: WebSocketCallback) {
     return () => {
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       if (wsRef.current) {
-        wsRef.current.onclose = null; // Clear handler to avoid reconnection
-        wsRef.current.close();
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        try {
+          wsRef.current.close();
+        } catch (e) {
+          // ignore
+        }
       }
     };
   }, []);
 
   const sendEvent = (type: string, data: any) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type, data }));
+      try {
+        wsRef.current.send(JSON.stringify({ type, data }));
+      } catch (error) {
+        console.error('Error sending WebSocket event:', error);
+      }
     } else {
       console.warn('WebSocket not connected. Cannot send event:', type);
     }
@@ -66,3 +114,4 @@ export function useWebSocket(onEvent: WebSocketCallback) {
 
   return { sendEvent };
 }
+

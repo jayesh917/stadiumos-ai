@@ -12,6 +12,7 @@ import { NotificationsPanel } from './components/NotificationsPanel';
 import { AuditLogView } from './components/AuditLogView';
 import { Settings } from './components/Settings';
 import { useWebSocket } from './websocket';
+import { API_BASE_URL } from './config';
 import { 
   User, 
   Tournament, 
@@ -78,7 +79,7 @@ export default function App() {
   const [autoPlay, setAutoPlay] = useState(false);
 
   // Base API configuration
-  const API_BASE = 'http://localhost:8000/api';
+  const API_BASE = `${API_BASE_URL}/api`;
 
   // REST API Telemetry Fetchers
   const fetchAllTelemetry = async () => {
